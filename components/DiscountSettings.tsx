@@ -31,61 +31,75 @@ export default function DiscountSettings({
     <div className="bg-blue-600 p-5 rounded-2xl shadow-lg text-white">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-bold">🧧 優惠活動設定</h2>
-        <button onClick={addTier} className="text-xs bg-blue-400 hover:bg-blue-500 px-2 py-1 rounded-lg font-bold transition-colors">
-          + 新增級距
+        <button 
+          onClick={addTier} 
+          className="text-xs bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm active:scale-95"
+        >
+          + 新增滿額級距
         </button>
       </div>
 
       <div className="space-y-4">
-        {/* 全館折扣 */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm">全館折扣</span>
-          <select 
-            value={discountRate} 
-            onChange={e => setDiscountRate(Number(e.target.value))}
-            className="w-28 bg-white text-blue-600 p-2 rounded-xl font-bold text-center outline-none shadow-md"
-          >
-            <option value="100">無折扣</option>
-            <option value="88">88 折</option>
-            <option value="85">85 折</option>
-          </select>
+        {/* 1. 全館折扣 (改為手動輸入) */}
+        <div className="flex items-center justify-between bg-blue-700/30 p-3 rounded-2xl">
+          <div className="flex flex-col">
+            <span className="text-sm font-bold">全館折扣</span>
+            <span className="text-[10px] text-blue-200">無折扣填 100，85折填 85</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <input 
+              type="number" 
+              value={discountRate || ''} 
+              onChange={e => setDiscountRate(Number(e.target.value))}
+              className="w-20 bg-white text-blue-600 p-2 rounded-xl font-black text-center outline-none shadow-inner"
+              placeholder="100"
+            />
+            <span className="font-bold text-sm">折</span>
+          </div>
         </div>
 
-        <hr className="border-blue-400 opacity-30" />
+        <hr className="border-blue-400 opacity-20" />
 
-        {/* 滿額現折列表 */}
+        {/* 2. 滿額現折列表 */}
         <div className="space-y-3">
-          <p className="text-xs font-bold text-blue-200 uppercase">滿額現折 (可多筆)</p>
+          <p className="text-xs font-bold text-blue-200 uppercase tracking-wider">滿額現折自定義</p>
           {discountTiers.map((tier, idx) => (
-            <div key={idx} className="flex items-center gap-2 bg-blue-700/30 p-2 rounded-xl">
-              <span className="text-xs shrink-0">滿</span>
+            <div key={idx} className="flex items-center gap-2 bg-blue-700/30 p-2 rounded-xl animate-in fade-in zoom-in duration-300">
+              <span className="text-xs font-bold shrink-0 ml-1">滿</span>
               <input 
                 type="number" 
                 value={tier.threshold || ''} 
                 onChange={e => updateTier(idx, 'threshold', Number(e.target.value))}
-                className="w-full min-w-[60px] bg-white text-blue-600 p-1.5 rounded-lg font-bold text-center text-sm outline-none"
-                placeholder="1500"
+                className="w-full bg-white text-blue-600 p-2 rounded-lg font-bold text-center text-sm outline-none shadow-inner"
+                placeholder="金額"
               />
-              <span className="text-xs shrink-0">扣</span>
+              <span className="text-xs font-bold shrink-0">扣</span>
               <input 
                 type="number" 
                 value={tier.cashOff || ''} 
                 onChange={e => updateTier(idx, 'cashOff', Number(e.target.value))}
-                className="w-full min-w-[60px] bg-white text-blue-600 p-1.5 rounded-lg font-bold text-center text-sm outline-none"
-                placeholder="100"
+                className="w-full bg-white text-blue-600 p-2 rounded-lg font-bold text-center text-sm outline-none shadow-inner"
+                placeholder="現折"
               />
-              <button onClick={() => removeTier(idx)} className="text-blue-200 hover:text-white px-1">✕</button>
+              <button 
+                onClick={() => removeTier(idx)} 
+                className="text-blue-200 hover:text-white p-1 transition-colors"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-sm">滿額再送卷 ($)</span>
+        {/* 3. 滿額贈送 */}
+        <div className="flex items-center justify-between pt-2 border-t border-blue-400/20">
+          <span className="text-sm font-medium">滿額再送折價卷 ($)</span>
           <input 
             type="number" 
             value={couponReward || ''} 
             onChange={e => setCouponReward(Number(e.target.value))} 
-            className="w-20 bg-white text-blue-600 p-2 rounded-xl font-bold text-center text-sm outline-none"
+            className="w-20 bg-white text-blue-600 p-2 rounded-xl font-black text-center text-sm outline-none shadow-inner"
+            placeholder="0"
           />
         </div>
       </div>
