@@ -1,12 +1,11 @@
-import { Item, ResultCombo } from '../types';
+import { Item, ResultCombo, DiscountTier } from '../types';
 
 export const runCalculator = (
   items: Item[], 
   target: number, 
   tolerance: number,
   discountRate: number,
-  threshold: number,
-  cashOff: number,
+  discountTiers: DiscountTier[], // 改為陣列
   couponReward: number
 ): ResultCombo[] => {
   const validItems = items.filter(i => i.name.trim() !== '' && i.price > 0);
@@ -15,14 +14,20 @@ export const runCalculator = (
 
   const backtrack = (index: number, currentSum: number, selected: { [key: string]: number }) => {
     if (currentSum >= target && currentSum <= maxLimit) {
-      // 計算優惠後的金額
+      // 1. 先算打折
       let price = currentSum * (discountRate / 100);
-      let bonus = "";
-      if (currentSum >= threshold) {
-        price = price - cashOff;
-        if (couponReward > 0) bonus = `回饋 $${couponReward} 卷`;
-      }
+      
+      // 2. 找出符合條件且折抵金額最高的級距
+      let bestCashOff = 0;
+      discountTiers.forEach(tier => {
+        if (currentSum >= tier.threshold && tier.cashOff > bestCashOff) {
+          bestCashOff = tier.cashOff;
+        }
+      });
+      
+      price = price - bestCashOff;
       const finalPay = Math.max(0, Math.round(price));
+      const bonus = currentSum >= target && couponReward > 0 ? `回饋 $${couponReward} 卷` : "";
 
       allValid.push({
         items: validItems.filter(i => selected[i.id] > 0).map(i => ({ 
@@ -49,5 +54,5 @@ export const runCalculator = (
   };
 
   backtrack(0, 0, {});
-  return allValid.sort((a, b) => a.subtotal - b.subtotal);
+  return allValid.sort((a, b) => a.finalPay - b.finalPay);
 };
