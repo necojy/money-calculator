@@ -11,7 +11,8 @@ export default function Home() {
   // --- 1. 狀態定義 ---
   // 商品清單
   const [items, setItems] = useState<Item[]>([{ id: 'default', name: '', price: 0, maxQty: 1 }]);
-  
+  const [discountThreshold, setDiscountThreshold] = useState(0);
+
   // 目標金額與誤差範圍
   const [target, setTarget] = useState(1500);
   const [tolerance, setTolerance] = useState(200);
@@ -61,6 +62,7 @@ export default function Home() {
       target, 
       tolerance, 
       discountRate, 
+      discountThreshold, // 傳入新參數
       discountTiers, 
       couponReward
     );
@@ -112,6 +114,8 @@ export default function Home() {
             <DiscountSettings 
               discountRate={discountRate} 
               setDiscountRate={setDiscountRate}
+              discountThreshold={discountThreshold} // 新增
+              setDiscountThreshold={setDiscountThreshold} // 新增
               discountTiers={discountTiers}
               setDiscountTiers={setDiscountTiers}
               couponReward={couponReward}

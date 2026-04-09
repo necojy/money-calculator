@@ -3,6 +3,8 @@ import { DiscountTier } from '../types';
 interface Props {
   discountRate: number;
   setDiscountRate: (v: number) => void;
+  discountThreshold: number; // 新增
+  setDiscountThreshold: (v: number) => void; // 新增
   discountTiers: DiscountTier[];
   setDiscountTiers: (v: DiscountTier[]) => void;
   couponReward: number;
