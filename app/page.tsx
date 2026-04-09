@@ -40,6 +40,7 @@ export default function Home() {
         setTolerance(data.tolerance || 200);
         setDiscountTiers(data.discountTiers || [{ threshold: 1500, cashOff: 100 }]);
         setDiscountRate(data.discountRate || 100);
+        setDiscountThreshold(data.discountThreshold || 0); // 加入這行
       } catch (e) {
         console.error("讀取存檔失敗", e);
       }
@@ -49,10 +50,10 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoaded) {
-      const saveData = { items, target, tolerance, discountTiers, discountRate };
+      const saveData = { items, target, tolerance, discountTiers, discountRate,discountThreshold};
       localStorage.setItem('money-calc-v6', JSON.stringify(saveData));
     }
-  }, [items, target, tolerance, discountTiers, discountRate, isLoaded]);
+}, [items, target, tolerance, discountTiers, discountRate, discountThreshold, isLoaded]);
 
   // --- 3. 處理計算按鈕 ---
   const handleCalculate = () => {

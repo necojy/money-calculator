@@ -3,16 +3,20 @@ import { DiscountTier } from '../types';
 interface Props {
   discountRate: number;
   setDiscountRate: (v: number) => void;
-  discountThreshold: number; // 新增
-  setDiscountThreshold: (v: number) => void; // 新增
+  discountThreshold: number; // 已定義
+  setDiscountThreshold: (v: number) => void; // 已定義
   discountTiers: DiscountTier[];
   setDiscountTiers: (v: DiscountTier[]) => void;
   couponReward: number;
   setCouponReward: (v: number) => void;
 }
 
+// 修正點：要在這裡解構 discountThreshold 和 setDiscountThreshold
 export default function DiscountSettings({
-  discountRate, setDiscountRate, discountTiers, setDiscountTiers, couponReward, setCouponReward
+  discountRate, setDiscountRate, 
+  discountThreshold, setDiscountThreshold, 
+  discountTiers, setDiscountTiers, 
+  couponReward, setCouponReward
 }: Props) {
   
   const addTier = () => {
@@ -32,7 +36,7 @@ export default function DiscountSettings({
   return (
     <div className="bg-blue-600 p-5 rounded-2xl shadow-lg text-white">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-bold">🧧 優惠活動設定</h2>
+        <h2 className="font-bold text-lg">🧧 優惠活動設定</h2>
         <button 
           onClick={addTier} 
           className="text-xs bg-blue-500 hover:bg-blue-400 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm active:scale-95"
@@ -42,21 +46,38 @@ export default function DiscountSettings({
       </div>
 
       <div className="space-y-4">
-        {/* 1. 全館折扣 (改為手動輸入) */}
-        <div className="flex items-center justify-between bg-blue-700/30 p-3 rounded-2xl">
-          <div className="flex flex-col">
-            <span className="text-sm font-bold">全館折扣</span>
-            <span className="text-[10px] text-blue-200">無折扣填 100，85折填 85</span>
+        {/* 1. 全館折扣區塊 (新增了門檻輸入) */}
+        <div className="bg-blue-700/30 p-4 rounded-2xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm font-bold">全館打折條件</span>
+              <span className="text-[10px] text-blue-200">未達門檻則不執行折扣</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs">滿</span>
+              <input 
+                type="number" 
+                value={discountThreshold || ''} 
+                onChange={e => setDiscountThreshold(Number(e.target.value))}
+                className="w-20 bg-white text-blue-600 p-2 rounded-xl font-black text-center outline-none"
+                placeholder="0"
+              />
+              <span className="text-xs">元</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <input 
-              type="number" 
-              value={discountRate || ''} 
-              onChange={e => setDiscountRate(Number(e.target.value))}
-              className="w-20 bg-white text-blue-600 p-2 rounded-xl font-black text-center outline-none shadow-inner"
-              placeholder="100"
-            />
-            <span className="font-bold text-sm">折</span>
+          
+          <div className="flex items-center justify-between border-t border-blue-500/30 pt-3">
+            <span className="text-sm font-bold">打折額度</span>
+            <div className="flex items-center gap-2">
+              <input 
+                type="number" 
+                value={discountRate || ''} 
+                onChange={e => setDiscountRate(Number(e.target.value))}
+                className="w-20 bg-white text-blue-600 p-2 rounded-xl font-black text-center outline-none"
+                placeholder="100"
+              />
+              <span className="font-bold text-sm">折</span>
+            </div>
           </div>
         </div>
 
@@ -64,9 +85,9 @@ export default function DiscountSettings({
 
         {/* 2. 滿額現折列表 */}
         <div className="space-y-3">
-          <p className="text-xs font-bold text-blue-200 uppercase tracking-wider">滿額現折自定義</p>
+          <p className="text-xs font-bold text-blue-200 uppercase tracking-wider">滿額現折自定義 (打折後才判斷)</p>
           {discountTiers.map((tier, idx) => (
-            <div key={idx} className="flex items-center gap-2 bg-blue-700/30 p-2 rounded-xl animate-in fade-in zoom-in duration-300">
+            <div key={idx} className="flex items-center gap-2 bg-blue-700/30 p-2 rounded-xl">
               <span className="text-xs font-bold shrink-0 ml-1">滿</span>
               <input 
                 type="number" 
