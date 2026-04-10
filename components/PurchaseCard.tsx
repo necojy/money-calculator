@@ -122,9 +122,24 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
 
             {record.items.map((item, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                <input type="text" value={item.name} onChange={(e) => updateDetail(idx, 'name', e.target.value)} className="col-span-4 bg-white p-2 rounded-xl text-sm font-bold outline-none text-black" />
-                <input type="number" value={item.price || ''} onChange={(e) => updateDetail(idx, 'price', Number(e.target.value))} className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-right text-orange-600 outline-none" />
-                <input type="number" value={item.sellingPrice || ''} onChange={(e) => updateDetail(idx, 'sellingPrice', Number(e.target.value))} className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-right text-blue-600 outline-none" />
+<input 
+  type="text" 
+  value={item.name} 
+  readOnly // 鎖定名稱
+  className="col-span-4 bg-slate-100 p-2 rounded-xl text-sm font-bold outline-none text-slate-500 cursor-not-allowed" 
+/>                
+<input 
+  type="number" 
+  value={item.price || ''} 
+  onChange={(e) => updateDetail(idx, 'price', Number(e.target.value))} 
+  className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-right text-orange-600 outline-none" 
+/>
+<input 
+  type="number" 
+  value={item.sellingPrice || ''} 
+  readOnly // 鎖定售價
+  className="col-span-2 bg-slate-100 p-2 rounded-xl text-sm font-black text-right text-blue-400 outline-none cursor-not-allowed" 
+/>
                 <input type="number" value={item.qty} onChange={(e) => updateDetail(idx, 'qty', Number(e.target.value))} className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-center text-black outline-none" />
                 <div className="col-span-1 text-right text-xs font-black text-slate-400">
                   ${(Number(item.sellingPrice) - Number(item.price)) * Number(item.qty)}

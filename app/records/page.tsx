@@ -81,6 +81,18 @@ export default function RecordsPage() {
 
   if (!isLoaded) return <div className="p-10 text-center font-bold">載入中...</div>;
 
+  const updateMasterProduct = (id: string) => {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+
+  const newName = prompt("修改商品名稱:", product.name);
+  const newPrice = Number(prompt("修改預期售價:", product.defaultPrice.toString()));
+
+  if (newName && !isNaN(newPrice)) {
+    setProducts(products.map(p => p.id === id ? { ...p, name: newName, defaultPrice: newPrice } : p));
+  }
+};
+
   return (
     <main className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -98,9 +110,11 @@ export default function RecordsPage() {
         />
 
         {/* 3. 常用商品清單 */}
+        // 在 return 中更新 MasterProduct 調用：
         <MasterProduct 
           products={products} 
           onAdd={addMasterProduct} 
+          onUpdate={updateMasterProduct} // 傳入編輯函式
           onDelete={(id) => setProducts(products.filter(p => p.id !== id))} 
         />
 
