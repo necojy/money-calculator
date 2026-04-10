@@ -36,6 +36,10 @@ export type PurchaseItem = {
 export type PurchaseRecord = {
   id: string;
   date: string;
+  buyer: string;         // 新增：購買人
+  store: string;         // 新增：購買地方
+  paymentMethod: string; // 新增：付款方式
+  pickupLocation: string; // 新增：取貨地點
   items: PurchaseItem[];
   totalAmount: number; 
   isReconciled: boolean;
