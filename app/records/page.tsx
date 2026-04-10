@@ -34,18 +34,32 @@ export default function RecordsPage() {
   };
 
   // 修改常用商品的邏輯
-  const updateMasterProduct = (id: string) => {
-    const product = products.find(p => p.id === id);
-    if (!product) return;
+ const updateMasterProduct = (id: string) => {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
 
-    const newName = prompt("修改商品名稱:", product.name);
-    const newPrice = Number(prompt("修改預期售價:", product.defaultPrice.toString()));
+  const oldName = product.name; // 記錄舊名稱用來比對
+  const newName = prompt("修改商品名稱:", product.name);
+  const newPrice = Number(prompt("修改預期售價:", product.defaultPrice.toString()));
 
-    if (newName && !isNaN(newPrice)) {
-      setProducts(products.map(p => p.id === id ? { ...p, name: newName, defaultPrice: newPrice } : p));
-    }
-  };
+  if (newName && !isNaN(newPrice)) {
+    // 1. 更新常用商品主表 (你原本有的)
+    const updatedProducts = products.map(p => 
+      p.id === id ? { ...p, name: newName, defaultPrice: newPrice } : p
+    );
+    setProducts(updatedProducts);
 
+    // 2. 核心修正：同步更新所有歷史紀錄
+    setHistory(history.map(record => ({
+      ...record,
+      items: record.items.map(item => 
+        item.name === oldName 
+          ? { ...item, name: newName, sellingPrice: newPrice } // 如果名稱對上，就更新
+          : item
+      )
+    })));
+  }
+};
   const addRecord = () => {
     setHistory([{
       id: Date.now().toString(),
