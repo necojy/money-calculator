@@ -104,10 +104,10 @@ export default function RecordsPage() {
               <div key={p.id} className="group flex items-center bg-slate-100 pl-4 pr-2 py-1.5 rounded-full border border-slate-200 hover:border-blue-300 transition-colors">
                 <span className="text-sm font-bold text-slate-700">{p.name} (${p.defaultPrice})</span>
                 <button 
-                  onClick={() => deleteProduct(p.id)}
-                  className="ml-2 text-slate-300 hover:text-red-500 font-bold p-1 leading-none"
+                onClick={() => deleteProduct(p.id)}
+                className="ml-2 text-red-400 hover:text-red-600 font-bold p-1 leading-none"
                 >
-                  ✕
+                ✕
                 </button>
               </div>
             ))}
@@ -122,10 +122,10 @@ export default function RecordsPage() {
               {/* 刪除紀錄按鈕 (右上角) */}
               <button 
                 onClick={() => deleteRecord(record.id)}
-                className="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold p-2"
-              >
+                className="absolute top-4 right-4 text-red-400 hover:text-red-600 transition-colors font-bold p-2 text-xs"
+                >
                 刪除紀錄 ✕
-              </button>
+                </button>
 
               <div className="flex justify-between items-center mb-4">
                 <div>
