@@ -63,9 +63,8 @@ const addRecord = () => {
     items: [], 
     totalAmount: 0,
     isReconciled: false,
-    // --- 新增初始化 ---
-    purchaser: '',
-    purchaseLocation: '',
+    purchaser: '',        // 預設為空，讓使用者從選單選
+    purchaseLocation: '', // 預設為空
     paymentMethod: '信用卡',
     pickupLocation: ''
   }, ...history]);
