@@ -18,7 +18,8 @@ export default function RecordsPage() {
     totalPages,
     pagedHistory,
     filteredHistory,
-    stats
+    stats,
+    syncAddRecord, syncUpdateRecord, syncDeleteRecord // <--- 補上這幾行
   } = usePurchaseRecords();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,20 +61,19 @@ export default function RecordsPage() {
     })));
   }
 };
-  const addRecord = () => {
-    setHistory([{
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      items: [], 
-      totalAmount: 0,
-      isReconciled: false,
-      purchaser: '',
-      purchaseLocation: '',
-      paymentMethod: '信用卡',
-      pickupLocation: ''
-    }, ...history]);
-    setCurrentPage(1);
+const addRecord = async () => {
+  const newObj = {
+    date: new Date().toISOString().split('T')[0],
+    items: [],
+    total_amount: 0, // 確保與 SQL 欄位名稱一致
+    is_reconciled: false,
+    purchaser: '',
+    purchase_location: '',
+    payment_method: '信用卡',
+    pickup_location: ''
   };
+  await syncAddRecord(newObj);
+};
 
   const handleExport = () => {
     const data = { products, history };
