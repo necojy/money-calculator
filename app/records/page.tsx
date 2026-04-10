@@ -1,81 +1,37 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Product, PurchaseRecord } from '@/types';
+import { useRef } from 'react';
+import { usePurchaseRecords } from '@/hooks/usePurchaseRecords';
 import RecordStats from '@/components/RecordStats';
 import PurchaseCard from '@/components/PurchaseCard';
 import MasterProduct from '@/components/MasterProduct';
 import RecordBackup from '@/components/RecordBackup';
 
 export default function RecordsPage() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [history, setHistory] = useState<PurchaseRecord[]>([]);
+  // 從 Custom Hook 取得所有狀態與資料邏輯
+  const {
+    isLoaded,
+    products, setProducts,
+    history, setHistory,
+    filterName, setFilterName,
+    filterMonth, setFilterMonth,
+    currentPage, setCurrentPage,
+    totalPages,
+    pagedHistory,
+    filteredHistory,
+    stats
+  } = usePurchaseRecords();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const STORAGE_KEY = 'shopping-helper-final';
 
-  // --- 1. 篩選與分頁狀態 ---
-  const [filterName, setFilterName] = useState('');      // 篩選購買人
-  const [filterMonth, setFilterMonth] = useState('');    // 篩選月份 (格式: YYYY-MM)
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // 每頁顯示 5 筆
+  // --- 動作處理函式 ---
 
-  // --- 2. 資料篩選邏輯 ---
-  const filteredHistory = history.filter(record => {
-    const matchName = filterName ? record.purchaser === filterName : true;
-    const matchMonth = filterMonth ? record.date.startsWith(filterMonth) : true;
-    return matchName && matchMonth;
-  });
-
-  // --- 3. 分頁切割 ---
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
-  const pagedHistory = filteredHistory.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  // --- 4. 統計計算 (與篩選連動) ---
-  // 成本與營收：僅計算篩選範圍內「未對帳」的金額
-  const unReconciled = filteredHistory.filter(h => !h.isReconciled);
-  const totalCost = unReconciled.reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const totalRevenue = unReconciled.reduce((acc, curr) => 
-    acc + curr.items.reduce((s, i) => s + (Number(i.sellingPrice || 0) * Number(i.qty)), 0), 0
-  );
-
-  // 淨利潤：計算篩選範圍內「所有」紀錄的總獲利 (對帳後不消失)
-  const totalProfit = filteredHistory.reduce((acc, curr) => {
-    const revenue = curr.items.reduce((s, i) => s + (Number(i.sellingPrice || 0) * Number(i.qty)), 0);
-    return acc + (revenue - curr.totalAmount);
-  }, 0);
-
-  // --- 5. 本地儲存邏輯 ---
-  useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      try {
-        const { products: p, history: h } = JSON.parse(savedData);
-        if (p) setProducts(p);
-        if (h) setHistory(h);
-      } catch (e) {
-        console.error("讀取存檔失敗", e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      const dataToSave = { products, history };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-    }
-  }, [products, history, isLoaded]);
-
-  // --- 6. 功能處理函式 ---
   const addMasterProduct = () => {
     const name = prompt("商品名稱:");
     const price = Number(prompt("預期售出價:"));
-    if (name) setProducts([...products, { id: Date.now().toString(), name, defaultPrice: price || 0 }]);
+    if (name) {
+      setProducts([...products, { id: Date.now().toString(), name, defaultPrice: price || 0 }]);
+    }
   };
 
   const addRecord = () => {
@@ -120,6 +76,7 @@ export default function RecordsPage() {
       } catch (err) { alert("檔案格式錯誤"); }
     };
     reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   if (!isLoaded) return <div className="p-10 text-center font-bold">載入中...</div>;
@@ -130,23 +87,24 @@ export default function RecordsPage() {
         
         {/* 1. 統計看板 */}
         <RecordStats 
-          totalCost={totalCost} 
-          totalRevenue={totalRevenue} 
-          totalProfit={totalProfit} 
+          {...stats} 
           selectedMonth={filterMonth}
         />
 
-        {/* 2. 資料備份與還原 */}
-        <RecordBackup onExport={handleExport} onImport={handleImport} />
+        {/* 2. 資料備份管理 */}
+        <RecordBackup 
+          onExport={handleExport} 
+          onImport={handleImport} 
+        />
 
-        {/* 3. 常用商品管理 */}
+        {/* 3. 常用商品清單 */}
         <MasterProduct 
           products={products} 
           onAdd={addMasterProduct} 
           onDelete={(id) => setProducts(products.filter(p => p.id !== id))} 
         />
 
-        {/* 4. 篩選與搜尋工具列 */}
+        {/* 4. 進階篩選工具列 */}
         <div className="bg-white p-6 rounded-[32px] border border-slate-200 flex flex-col md:flex-row gap-6 items-start md:items-center">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">月份篩選:</span>
@@ -180,19 +138,22 @@ export default function RecordsPage() {
               onClick={() => { setFilterName(''); setFilterMonth(''); setCurrentPage(1); }}
               className="text-[10px] font-bold text-red-400 hover:text-red-600 self-end md:self-center"
             >
-              清除篩選 ✕
+              清除所有篩選 ✕
             </button>
           )}
         </div>
 
         <div className="flex justify-between items-center pt-4">
           <h1 className="text-3xl font-black text-slate-800">購買與獲利紀錄 📑</h1>
-          <button onClick={addRecord} className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 transition-all">
+          <button 
+            onClick={addRecord} 
+            className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 transition-all"
+          >
             + 開始新紀錄
           </button>
         </div>
 
-        {/* 5. 紀錄列表 (分頁顯示) */}
+        {/* 5. 紀錄列表 (分頁顯示 & 支援摺疊) */}
         <section className="space-y-6">
           {pagedHistory.map(record => (
             <PurchaseCard 
@@ -220,8 +181,8 @@ export default function RecordsPage() {
             >
               ← 上一頁
             </button>
-            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm">
-              <span className="font-bold text-slate-500 text-sm">第 {currentPage} / {totalPages} 頁</span>
+            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm text-black">
+              <span className="font-bold text-sm">第 {currentPage} / {totalPages} 頁</span>
             </div>
             <button 
               disabled={currentPage === totalPages}
