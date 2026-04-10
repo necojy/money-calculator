@@ -18,15 +18,15 @@ export type ResultCombo = {
   bonusNote: string;
 };
 
+// --- types/index.ts ---
 export type Product = {
   id: string;
   name: string;
   defaultPrice: number;
 };
 
-// 重點修正：確保包含售價且 productId 變選填
 export type PurchaseItem = {
-  productId?: string; 
+  productId?: string;
   name: string;
   price: number;        // 進貨成本
   sellingPrice: number; // 售出單價
@@ -36,11 +36,7 @@ export type PurchaseItem = {
 export type PurchaseRecord = {
   id: string;
   date: string;
-  buyer: string;         // 新增：購買人
-  store: string;         // 新增：購買地方
-  paymentMethod: string; // 新增：付款方式
-  pickupLocation: string; // 新增：取貨地點
   items: PurchaseItem[];
-  totalAmount: number; 
+  totalAmount: number;  // 總進貨成本
   isReconciled: boolean;
 };
