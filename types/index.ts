@@ -1,3 +1,5 @@
+// --- 修正後的 types/index.ts ---
+
 export type Item = {
   id: string;
   name: string;
@@ -5,7 +7,6 @@ export type Item = {
   maxQty: number;
 };
 
-// 新增這段
 export type DiscountTier = {
   threshold: number;
   cashOff: number;
@@ -18,26 +19,25 @@ export type ResultCombo = {
   bonusNote: string;
 };
 
-// --- 產品主表 (Master List) ---
 export type Product = {
   id: string;
   name: string;
   defaultPrice: number;
 };
 
-// --- 單筆購買內容 ---
+// --- 重點修正：加入 sellingPrice 並讓 productId 變選填 ---
 export type PurchaseItem = {
-  productId: string;
+  productId?: string; // 加個問號變成選填
   name: string;
-  price: number;
+  price: number;        // 進貨成本
+  sellingPrice: number; // 售出單價 (新增這行)
   qty: number;
 };
 
-// --- 購買紀錄紀錄 ---
 export type PurchaseRecord = {
   id: string;
   date: string;
   items: PurchaseItem[];
-  totalAmount: number;
-  isReconciled: boolean; // 是否對帳
+  totalAmount: number; // 總支出成本
+  isReconciled: boolean;
 };

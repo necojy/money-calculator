@@ -83,9 +83,14 @@ export default function RecordsPage() {
 
   // --- 計算統計數據 ---
   const totalCost = history.reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const totalRevenue = history.reduce((acc, curr) => {
-    return acc + curr.items.reduce((sum: number, item: any) => sum + (Number(item.sellingPrice || 0) * Number(item.qty)), 0);
-  }, 0);
+const totalRevenue = history.reduce((acc, curr) => {
+return acc + curr.items.reduce((sum, item: PurchaseItem) => {
+    // 確保這裡抓到的是正確的數字
+    const sPrice = Number(item.sellingPrice) || 0;
+    const q = Number(item.qty) || 0;
+    return sum + (sPrice * q);
+}, 0);
+}, 0);
   const totalProfit = totalRevenue - totalCost;
 
   if (!isLoaded) return <div className="p-10 text-center font-bold">載入中...</div>;
@@ -196,8 +201,14 @@ export default function RecordsPage() {
                         + {p.name}
                       </button>
                     ))}
-                    <button onClick={() => setHistory(history.map(h => h.id === record.id ? {...h, items: [...h.items, { name: '新商品', price: 0, sellingPrice: 0, qty: 1 }]} : h))} className="bg-slate-200 text-slate-600 text-xs font-bold px-3 py-2 rounded-xl">
-                      + 手動新增
+                    <button 
+                        onClick={() => setHistory(history.map(h => h.id === record.id ? {
+                            ...h, 
+                            items: [...h.items, { name: '新商品', price: 0, sellingPrice: 0, qty: 1 }] // 這裡要補齊欄位
+                        } : h))} 
+                        className="bg-slate-200 text-slate-600 text-xs font-bold px-3 py-2 rounded-xl"
+                        >
+                        + 手動新增
                     </button>
                   </div>
                 </div>
