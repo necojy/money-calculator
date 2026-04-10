@@ -8,7 +8,6 @@ import MasterProduct from '@/components/MasterProduct';
 import RecordBackup from '@/components/RecordBackup';
 
 export default function RecordsPage() {
-  // 從 Custom Hook 取得所有狀態與資料邏輯
   const {
     isLoaded,
     products, setProducts,
@@ -34,6 +33,19 @@ export default function RecordsPage() {
     }
   };
 
+  // 修改常用商品的邏輯
+  const updateMasterProduct = (id: string) => {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+
+    const newName = prompt("修改商品名稱:", product.name);
+    const newPrice = Number(prompt("修改預期售價:", product.defaultPrice.toString()));
+
+    if (newName && !isNaN(newPrice)) {
+      setProducts(products.map(p => p.id === id ? { ...p, name: newName, defaultPrice: newPrice } : p));
+    }
+  };
+
   const addRecord = () => {
     setHistory([{
       id: Date.now().toString(),
@@ -46,7 +58,7 @@ export default function RecordsPage() {
       paymentMethod: '信用卡',
       pickupLocation: ''
     }, ...history]);
-    setCurrentPage(1); // 新增後跳回第一頁
+    setCurrentPage(1);
   };
 
   const handleExport = () => {
@@ -81,44 +93,23 @@ export default function RecordsPage() {
 
   if (!isLoaded) return <div className="p-10 text-center font-bold">載入中...</div>;
 
-  const updateMasterProduct = (id: string) => {
-  const product = products.find(p => p.id === id);
-  if (!product) return;
-
-  const newName = prompt("修改商品名稱:", product.name);
-  const newPrice = Number(prompt("修改預期售價:", product.defaultPrice.toString()));
-
-  if (newName && !isNaN(newPrice)) {
-    setProducts(products.map(p => p.id === id ? { ...p, name: newName, defaultPrice: newPrice } : p));
-  }
-};
-
   return (
     <main className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
       <div className="max-w-5xl mx-auto space-y-6">
         
-        {/* 1. 統計看板 */}
-        <RecordStats 
-          {...stats} 
-          selectedMonth={filterMonth}
-        />
+        <RecordStats {...stats} selectedMonth={filterMonth} />
 
-        {/* 2. 資料備份管理 */}
-        <RecordBackup 
-          onExport={handleExport} 
-          onImport={handleImport} 
-        />
+        <RecordBackup onExport={handleExport} onImport={handleImport} />
 
         {/* 3. 常用商品清單 */}
-        // 在 return 中更新 MasterProduct 調用：
         <MasterProduct 
           products={products} 
           onAdd={addMasterProduct} 
-          onUpdate={updateMasterProduct} // 傳入編輯函式
+          onUpdate={updateMasterProduct} 
           onDelete={(id) => setProducts(products.filter(p => p.id !== id))} 
         />
 
-        {/* 4. 進階篩選工具列 */}
+        {/* 4. 篩選列 */}
         <div className="bg-white p-6 rounded-[32px] border border-slate-200 flex flex-col md:flex-row gap-6 items-start md:items-center">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">月份篩選:</span>
@@ -159,15 +150,12 @@ export default function RecordsPage() {
 
         <div className="flex justify-between items-center pt-4">
           <h1 className="text-3xl font-black text-slate-800">購買與獲利紀錄 📑</h1>
-          <button 
-            onClick={addRecord} 
-            className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 transition-all"
-          >
+          <button onClick={addRecord} className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 transition-all">
             + 開始新紀錄
           </button>
         </div>
 
-        {/* 5. 紀錄列表 (分頁顯示 & 支援摺疊) */}
+        {/* 5. 紀錄清單 */}
         <section className="space-y-6">
           {pagedHistory.map(record => (
             <PurchaseCard 
@@ -179,32 +167,18 @@ export default function RecordsPage() {
             />
           ))}
           {filteredHistory.length === 0 && (
-            <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-slate-100">
-              <p className="text-slate-400 font-bold">沒有符合篩選條件的紀錄</p>
+            <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-slate-100 text-slate-400 font-bold">
+              沒有符合篩選條件的紀錄
             </div>
           )}
         </section>
 
-        {/* 6. 分頁控制項 */}
+        {/* 6. 分頁 */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-6 pt-8 pb-10">
-            <button 
-              disabled={currentPage === 1}
-              onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0, 0); }}
-              className="font-black text-blue-600 disabled:opacity-20 transition-opacity p-2"
-            >
-              ← 上一頁
-            </button>
-            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm text-black">
-              <span className="font-bold text-sm">第 {currentPage} / {totalPages} 頁</span>
-            </div>
-            <button 
-              disabled={currentPage === totalPages}
-              onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0, 0); }}
-              className="font-black text-blue-600 disabled:opacity-20 transition-opacity p-2"
-            >
-              下一頁 →
-            </button>
+            <button disabled={currentPage === 1} onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0, 0); }} className="font-black text-blue-600 disabled:opacity-20 p-2">← 上一頁</button>
+            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm text-black text-sm font-bold">第 {currentPage} / {totalPages} 頁</div>
+            <button disabled={currentPage === totalPages} onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0, 0); }} className="font-black text-blue-600 disabled:opacity-20 p-2">下一頁 →</button>
           </div>
         )}
       </div>
