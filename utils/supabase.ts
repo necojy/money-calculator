@@ -9,3 +9,5 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
+
+console.log('當前網址為：', process.env.NEXT_PUBLIC_SUPABASE_URL);
