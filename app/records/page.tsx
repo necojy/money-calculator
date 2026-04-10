@@ -55,15 +55,21 @@ export default function RecordsPage() {
     if (name) setProducts([...products, { id: Date.now().toString(), name, defaultPrice: price || 0 }]);
   };
 
-  const addRecord = () => {
-    setHistory([{
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      items: [], 
-      totalAmount: 0,
-      isReconciled: false
-    }, ...history]);
-  };
+// --- 在 app/records/page.tsx 內修改 addRecord ---
+const addRecord = () => {
+  setHistory([{
+    id: Date.now().toString(),
+    date: new Date().toISOString().split('T')[0],
+    items: [], 
+    totalAmount: 0,
+    isReconciled: false,
+    // --- 新增初始化 ---
+    purchaser: '',
+    purchaseLocation: '',
+    paymentMethod: '信用卡',
+    pickupLocation: ''
+  }, ...history]);
+};
 
   const handleExport = () => {
     const data = { products, history };
