@@ -1,5 +1,4 @@
 // --- 修正後的 types/index.ts ---
-
 export type Item = {
   id: string;
   name: string;
@@ -25,12 +24,12 @@ export type Product = {
   defaultPrice: number;
 };
 
-// --- 重點修正：加入 sellingPrice 並讓 productId 變選填 ---
+// 重點修正：確保包含售價且 productId 變選填
 export type PurchaseItem = {
-  productId?: string; // 加個問號變成選填
+  productId?: string; 
   name: string;
   price: number;        // 進貨成本
-  sellingPrice: number; // 售出單價 (新增這行)
+  sellingPrice: number; // 售出單價
   qty: number;
 };
 
@@ -38,6 +37,6 @@ export type PurchaseRecord = {
   id: string;
   date: string;
   items: PurchaseItem[];
-  totalAmount: number; // 總支出成本
+  totalAmount: number; 
   isReconciled: boolean;
 };
