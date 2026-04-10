@@ -15,6 +15,24 @@ export default function RecordsPage() {
   
   const STORAGE_KEY = 'shopping-helper-final';
 
+  // 1. 新增搜尋與分頁狀態
+  const [filterName, setFilterName] = useState(''); // 篩選購買人
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // 每頁顯示 5 筆
+
+  // 2. 處理篩選後的資料
+  const filteredHistory = history.filter(record => {
+    const matchName = filterName ? record.purchaser === filterName : true;
+    return matchName;
+  });
+
+  // 3. 處理分頁切割
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const pagedHistory = filteredHistory.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   // --- 資料讀取與存檔 ---
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -55,20 +73,19 @@ export default function RecordsPage() {
     if (name) setProducts([...products, { id: Date.now().toString(), name, defaultPrice: price || 0 }]);
   };
 
-// --- 在 app/records/page.tsx 內修改 addRecord ---
-const addRecord = () => {
-  setHistory([{
-    id: Date.now().toString(),
-    date: new Date().toISOString().split('T')[0],
-    items: [], 
-    totalAmount: 0,
-    isReconciled: false,
-    purchaser: '',        // 預設為空，讓使用者從選單選
-    purchaseLocation: '', // 預設為空
-    paymentMethod: '信用卡',
-    pickupLocation: ''
-  }, ...history]);
-};
+  const addRecord = () => {
+    setHistory([{
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      items: [], 
+      totalAmount: 0,
+      isReconciled: false,
+      purchaser: '',
+      purchaseLocation: '',
+      paymentMethod: '信用卡',
+      pickupLocation: ''
+    }, ...history]);
+  };
 
   const handleExport = () => {
     const data = { products, history };
@@ -105,18 +122,33 @@ const addRecord = () => {
     <main className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
       <div className="max-w-5xl mx-auto space-y-6">
         
-        {/* 1. 統計看板 */}
         <RecordStats totalCost={totalCost} totalRevenue={totalRevenue} totalProfit={totalProfit} />
 
-        {/* 2. 資料備份 */}
         <RecordBackup onExport={handleExport} onImport={handleImport} />
 
-        {/* 3. 常用商品清單 */}
         <MasterProduct 
           products={products} 
           onAdd={addMasterProduct} 
           onDelete={(id) => setProducts(products.filter(p => p.id !== id))} 
         />
+
+        {/* 篩選工具列 */}
+        <div className="bg-white p-4 rounded-3xl border border-slate-200 flex flex-wrap gap-4 items-center">
+          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">篩選購買人:</span>
+          <div className="flex gap-2">
+            {['', '宥', '洪', '涵', '崑'].map(name => (
+              <button
+                key={name}
+                onClick={() => { setFilterName(name); setCurrentPage(1); }}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  filterName === name ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+              >
+                {name || '全部'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="flex justify-between items-center pt-4">
           <h1 className="text-3xl font-black text-slate-800">購買與獲利紀錄 📑</h1>
@@ -125,9 +157,9 @@ const addRecord = () => {
           </button>
         </div>
 
-        {/* 4. 紀錄列表 */}
+        {/* 紀錄列表：改用 pagedHistory */}
         <section className="space-y-6">
-          {history.map(record => (
+          {pagedHistory.map(record => (
             <PurchaseCard 
               key={record.id} 
               record={record} 
@@ -136,8 +168,31 @@ const addRecord = () => {
               onDelete={(id) => setHistory(history.filter(h => h.id !== id))}
             />
           ))}
-          {history.length === 0 && <p className="text-center py-20 text-slate-400 font-bold">目前沒有紀錄</p>}
+          {filteredHistory.length === 0 && <p className="text-center py-20 text-slate-400 font-bold">沒有符合篩選條件的紀錄</p>}
         </section>
+
+        {/* 分頁控制項 */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-6 pt-8 pb-10">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0, 0); }}
+              className="font-black text-blue-600 disabled:opacity-20 transition-opacity p-2"
+            >
+              ← 上一頁
+            </button>
+            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm">
+              <span className="font-bold text-slate-500 text-sm">第 {currentPage} / {totalPages} 頁</span>
+            </div>
+            <button 
+              disabled={currentPage === totalPages}
+              onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0, 0); }}
+              className="font-black text-blue-600 disabled:opacity-20 transition-opacity p-2"
+            >
+              下一頁 →
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );
