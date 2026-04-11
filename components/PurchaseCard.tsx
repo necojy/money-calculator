@@ -23,10 +23,11 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
     onUpdate({ ...record, items: newItems, total_amount: newTotalCost });
   };
 
-  const updateDetail = (idx: number, field: keyof PurchaseItem, value: any) => {
-    const newItems = record.items.map((item, i) => i === idx ? { ...item, [field]: value } : item);
-    handleUpdateItems(newItems);
-  };
+const updateDetail = (idx: number, field: keyof PurchaseItem, value: string | number) => {
+  // 將 value 的型別從 any 改為具體的類型
+  const newItems = record.items.map((item, i) => i === idx ? { ...item, [field]: value } : item);
+  handleUpdateItems(newItems);
+};
 
   return (
     <div className={`bg-white rounded-[32px] border-2 transition-all shadow-md overflow-hidden ${record.is_reconciled ? 'border-green-100 opacity-80' : 'border-slate-50'}`}>

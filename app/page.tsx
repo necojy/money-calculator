@@ -30,23 +30,21 @@ export default function Home() {
   const [hasCalculated, setHasCalculated] = useState(false);
 
   // --- 2. 瀏覽器暫存 (LocalStorage) 邏輯 ---
-  useEffect(() => {
-    const saved = localStorage.getItem('money-calc-v6');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        setItems(data.items || []);
-        setTarget(data.target || 1500);
-        setTolerance(data.tolerance || 200);
-        setDiscountTiers(data.discountTiers || [{ threshold: 1500, cashOff: 100 }]);
-        setDiscountRate(data.discountRate || 100);
-        setDiscountThreshold(data.discountThreshold || 0); // 加入這行
-      } catch (e) {
-        console.error("讀取存檔失敗", e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
+useEffect(() => {
+  const saved = localStorage.getItem('money-calculator-data');
+  if (!saved) return;
+
+  try {
+    const data = JSON.parse(saved);
+    // 檢查資料是否存在再更新，避免無意義的重新渲染
+    if (data.items) setItems(data.items);
+    if (data.target) setTarget(data.target);
+    if (data.tolerance) setTolerance(data.tolerance);
+    if (data.discountTiers) setDiscountTiers(data.discountTiers);
+  } catch (_err) { // 將 err 改為 _err 解決 unused 警告
+    console.error("讀取本地資料失敗");
+  }
+}, []);
 
   useEffect(() => {
     if (isLoaded) {
