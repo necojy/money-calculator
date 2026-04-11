@@ -19,7 +19,7 @@ export default function MasterProduct({ products, onAdd, onUpdate, onDelete }: P
         {products.map(p => (
           <div key={p.id} className="flex items-center bg-slate-50 px-3 py-2 rounded-2xl border border-slate-100 group hover:border-blue-300 transition-all">
             <span className="text-sm font-bold text-slate-700">
-              {p.name} <span className="text-blue-500 font-black ml-1">${p.defaultPrice}</span>
+              {p.name} <span className="..."> ${p.default_price} </span>
             </span>
             <div className="flex items-center ml-2 gap-1 opacity-0 group-hover:opacity-100 transition-all">
               {/* 編輯按鈕 */}

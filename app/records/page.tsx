@@ -10,7 +10,7 @@ import RecordBackup from '@/components/RecordBackup';
 export default function RecordsPage() {
   const {
     isLoaded,
-    products, setProducts,
+    products,
     history, setHistory,
     filterName, setFilterName,
     filterMonth, setFilterMonth,
@@ -19,61 +19,74 @@ export default function RecordsPage() {
     pagedHistory,
     filteredHistory,
     stats,
-    syncAddRecord, syncUpdateRecord, syncDeleteRecord // <--- 補上這幾行
+    // 雲端同步函式
+    syncAddRecord, 
+    syncUpdateRecord, 
+    syncDeleteRecord,
+    syncAddProduct,    
+    syncUpdateProduct, 
+    syncDeleteProduct
   } = usePurchaseRecords();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- 動作處理函式 ---
+  // --- 1. 常用商品動作處理 (同步雲端) ---
 
-  const addMasterProduct = () => {
+  const addMasterProduct = async () => {
     const name = prompt("商品名稱:");
     const price = Number(prompt("預期售出價:"));
     if (name) {
-      setProducts([...products, { id: Date.now().toString(), name, defaultPrice: price || 0 }]);
+      // 使用 syncAddProduct 寫入 Supabase
+      await syncAddProduct({ 
+        name, 
+        default_price: price || 0 
+      });
     }
   };
 
-  // 修改常用商品的邏輯
- const updateMasterProduct = (id: string) => {
-  const product = products.find(p => p.id === id);
-  if (!product) return;
+  const updateMasterProduct = async (id: string) => {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
 
-  const oldName = product.name; // 記錄舊名稱用來比對
-  const newName = prompt("修改商品名稱:", product.name);
-  const newPrice = Number(prompt("修改預期售價:", product.defaultPrice.toString()));
+    const oldName = product.name;
+    const newName = prompt("修改商品名稱:", product.name);
+    const newPrice = Number(prompt("修改預期售價:", product.default_price?.toString()));
 
-  if (newName && !isNaN(newPrice)) {
-    // 1. 更新常用商品主表 (你原本有的)
-    const updatedProducts = products.map(p => 
-      p.id === id ? { ...p, name: newName, defaultPrice: newPrice } : p
-    );
-    setProducts(updatedProducts);
+    if (newName && !isNaN(newPrice)) {
+      // 1. 同步更新商品主表
+      await syncUpdateProduct(id, { name: newName, default_price: newPrice });
 
-    // 2. 核心修正：同步更新所有歷史紀錄
-    setHistory(history.map(record => ({
-      ...record,
-      items: record.items.map(item => 
-        item.name === oldName 
-          ? { ...item, name: newName, sellingPrice: newPrice } // 如果名稱對上，就更新
-          : item
-      )
-    })));
-  }
-};
-const addRecord = async () => {
-  const newObj = {
-    date: new Date().toISOString().split('T')[0],
-    items: [],
-    total_amount: 0, // 確保與 SQL 欄位名稱一致
-    is_reconciled: false,
-    purchaser: '',
-    purchase_location: '',
-    payment_method: '信用卡',
-    pickup_location: ''
+      // 2. 更新本地歷史紀錄中的商品名稱 (維持 UI 一致性)
+      const updatedHistory = history.map(record => ({
+        ...record,
+        items: record.items.map((item: any) => 
+          item.name === oldName 
+            ? { ...item, name: newName, sellingPrice: newPrice } 
+            : item
+        )
+      }));
+      setHistory(updatedHistory);
+      // 注意：若要歷史紀錄也同步雲端，需對受影響的 record 呼叫 syncUpdateRecord
+    }
   };
-  await syncAddRecord(newObj);
-};
+
+  // --- 2. 購買紀錄動作處理 (同步雲端) ---
+
+  const addRecord = async () => {
+    const newObj = {
+      date: new Date().toISOString().split('T')[0],
+      items: [],
+      total_amount: 0, // 配合 SQL 底線命名
+      is_reconciled: false,
+      purchaser: '',
+      purchase_location: '',
+      payment_method: '信用卡',
+      pickup_location: ''
+    };
+    await syncAddRecord(newObj);
+  };
+
+  // --- 3. 備份與匯入 (Migration 輔助) ---
 
   const handleExport = () => {
     const data = { products, history };
@@ -86,17 +99,19 @@ const addRecord = async () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
         if (data.products && data.history) {
-          if (confirm("匯入將覆蓋目前資料，確定嗎？")) {
-            setProducts(data.products);
-            setHistory(data.history);
+          if (confirm("這將會把舊資料匯入雲端，確定嗎？")) {
+            // 這裡建議搬家時手動一筆一筆 sync 到雲端
+            for (const p of data.products) await syncAddProduct(p);
+            for (const h of data.history) await syncAddRecord(h);
+            alert("雲端同步完成！");
           }
         }
       } catch (err) { alert("檔案格式錯誤"); }
@@ -111,8 +126,10 @@ const addRecord = async () => {
     <main className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
       <div className="max-w-5xl mx-auto space-y-6">
         
+        {/* 1. 統計看板 */}
         <RecordStats {...stats} selectedMonth={filterMonth} />
 
+        {/* 2. 備份功能 */}
         <RecordBackup onExport={handleExport} onImport={handleImport} />
 
         {/* 3. 常用商品清單 */}
@@ -120,11 +137,11 @@ const addRecord = async () => {
           products={products} 
           onAdd={addMasterProduct} 
           onUpdate={updateMasterProduct} 
-          onDelete={(id) => setProducts(products.filter(p => p.id !== id))} 
+          onDelete={(id) => syncDeleteProduct(id)} // 使用同步刪除
         />
 
         {/* 4. 篩選列 */}
-        <div className="bg-white p-6 rounded-[32px] border border-slate-200 flex flex-col md:flex-row gap-6 items-start md:items-center">
+        <div className="bg-white p-6 rounded-[32px] border border-slate-200 flex flex-col md:flex-row gap-6 items-start md:items-center shadow-sm">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">月份篩選:</span>
             <input 
@@ -162,6 +179,7 @@ const addRecord = async () => {
           )}
         </div>
 
+        {/* 5. 標題與新增按鈕 */}
         <div className="flex justify-between items-center pt-4">
           <h1 className="text-3xl font-black text-slate-800">購買與獲利紀錄 📑</h1>
           <button onClick={addRecord} className="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black shadow-xl hover:scale-105 transition-all">
@@ -169,15 +187,15 @@ const addRecord = async () => {
           </button>
         </div>
 
-        {/* 5. 紀錄清單 */}
+        {/* 6. 紀錄清單 */}
         <section className="space-y-6">
           {pagedHistory.map(record => (
             <PurchaseCard 
               key={record.id} 
               record={record} 
               products={products}
-              onUpdate={(updated) => setHistory(history.map(h => h.id === updated.id ? updated : h))}
-              onDelete={(id) => setHistory(history.filter(h => h.id !== id))}
+              onUpdate={(updated) => syncUpdateRecord(updated.id, updated)} // 使用同步更新
+              onDelete={(id) => syncDeleteRecord(id)} // 使用同步刪除
             />
           ))}
           {filteredHistory.length === 0 && (
@@ -187,12 +205,26 @@ const addRecord = async () => {
           )}
         </section>
 
-        {/* 6. 分頁 */}
+        {/* 7. 分頁控制項 */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-6 pt-8 pb-10">
-            <button disabled={currentPage === 1} onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0, 0); }} className="font-black text-blue-600 disabled:opacity-20 p-2">← 上一頁</button>
-            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm text-black text-sm font-bold">第 {currentPage} / {totalPages} 頁</div>
-            <button disabled={currentPage === totalPages} onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0, 0); }} className="font-black text-blue-600 disabled:opacity-20 p-2">下一頁 →</button>
+            <button 
+              disabled={currentPage === 1} 
+              onClick={() => { setCurrentPage(prev => prev - 1); window.scrollTo(0, 0); }} 
+              className="font-black text-blue-600 disabled:opacity-20 p-2"
+            >
+              ← 上一頁
+            </button>
+            <div className="bg-white px-6 py-2 rounded-full border border-slate-200 shadow-sm text-black text-sm font-bold">
+              第 {currentPage} / {totalPages} 頁
+            </div>
+            <button 
+              disabled={currentPage === totalPages} 
+              onClick={() => { setCurrentPage(prev => prev + 1); window.scrollTo(0, 0); }} 
+              className="font-black text-blue-600 disabled:opacity-20 p-2"
+            >
+              下一頁 →
+            </button>
           </div>
         )}
       </div>

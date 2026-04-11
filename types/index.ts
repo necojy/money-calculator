@@ -19,29 +19,27 @@ export type ResultCombo = {
 };
 
 // --- types/index.ts ---
-export type Product = {
+export interface Product {
   id: string;
   name: string;
-  defaultPrice: number;
-};
+  default_price: number; // 將 defaultPrice 改成 default_price
+}
 
-export type PurchaseItem = {
-  productId?: string;
+export interface PurchaseItem {
   name: string;
-  price: number;        // 進貨成本
-  sellingPrice: number; // 售出單價
+  price: number;        // 進貨價
+  sellingPrice: number; // 售出價 (建議這裡也統一改底線，看你個人習慣)
   qty: number;
-};
+}
 
-export type PurchaseRecord = {
+export interface PurchaseRecord {
   id: string;
   date: string;
   items: PurchaseItem[];
-  totalAmount: number;
-  isReconciled: boolean;
-  // --- 新增欄位 ---
-  purchaser: string;        // 購買人
-  purchaseLocation: string; // 購買地方
-  paymentMethod: string;    // 付款方式
-  pickupLocation: string;   // 取貨地點
-};
+  total_amount: number;  // 配合資料庫改底線
+  is_reconciled: boolean; // 配合資料庫改底線
+  purchaser: string;
+  purchase_location: string;
+  payment_method: string;
+  pickup_location: string;
+}
