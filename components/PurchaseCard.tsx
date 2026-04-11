@@ -11,15 +11,16 @@ interface Props {
 }
 
 export default function PurchaseCard({ record, products, onUpdate, onDelete }: Props) {
-  // 1. 新增摺疊狀態，預設為收合 (false)
+  // 1. 摺疊狀態
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // 2. 計算邏輯 (確保使用底線命名)
   const recordRevenue = record.items.reduce((sum, item) => sum + (Number(item.sellingPrice || 0) * Number(item.qty)), 0);
-  const recordProfit = recordRevenue - record.totalAmount;
+  const recordProfit = recordRevenue - (record.total_amount || 0);
 
   const handleUpdateItems = (newItems: PurchaseItem[]) => {
-    const newTotalCost = newItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
-    onUpdate({ ...record, items: newItems, totalAmount: newTotalCost });
+    const newTotalCost = newItems.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty)), 0);
+    onUpdate({ ...record, items: newItems, total_amount: newTotalCost });
   };
 
   const updateDetail = (idx: number, field: keyof PurchaseItem, value: any) => {
@@ -28,9 +29,9 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
   };
 
   return (
-    <div className={`bg-white rounded-[32px] border-2 transition-all shadow-md overflow-hidden ${record.isReconciled ? 'border-green-100 opacity-80' : 'border-slate-50'}`}>
+    <div className={`bg-white rounded-[32px] border-2 transition-all shadow-md overflow-hidden ${record.is_reconciled ? 'border-green-100 opacity-80' : 'border-slate-50'}`}>
       
-      {/* --- 摺疊標題列 (永遠顯示) --- */}
+      {/* --- 摺疊標題列 --- */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-6 cursor-pointer hover:bg-slate-50 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
@@ -43,7 +44,7 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
           <div className="flex gap-6">
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">成本</p>
-              <h3 className="text-xl font-black text-slate-800">${record.totalAmount}</h3>
+              <h3 className="text-xl font-black text-slate-800">${record.total_amount}</h3>
             </div>
             <div>
               <p className="text-[10px] font-bold text-green-500 uppercase tracking-tighter">獲利</p>
@@ -55,8 +56,8 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
             {record.purchaser && (
               <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">👤 {record.purchaser}</span>
             )}
-            {record.purchaseLocation && (
-              <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">📍 {record.purchaseLocation}</span>
+            {record.purchase_location && (
+              <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[10px] font-bold">📍 {record.purchase_location}</span>
             )}
           </div>
         </div>
@@ -66,8 +67,8 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
             <span className="text-[10px] font-bold text-slate-500">對帳</span>
             <input 
               type="checkbox" 
-              checked={record.isReconciled} 
-              onChange={() => onUpdate({ ...record, isReconciled: !record.isReconciled })} 
+              checked={record.is_reconciled} 
+              onChange={() => onUpdate({ ...record, is_reconciled: !record.is_reconciled })} 
               className="w-5 h-5 accent-green-600 cursor-pointer" 
             />
           </div>
@@ -77,11 +78,10 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
         </div>
       </div>
 
-      {/* --- 展開內容 (點擊後顯示) --- */}
+      {/* --- 展開內容 --- */}
       {isExpanded && (
         <div className="p-8 pt-2 border-t border-slate-50 space-y-8 animate-in fade-in slide-in-from-top-2 duration-300">
           
-          {/* 購買資訊選單 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-5 rounded-[24px]">
             <div>
               <label className="text-[10px] font-bold text-slate-400 block mb-1">購買人</label>
@@ -92,24 +92,23 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
             </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 block mb-1">購買地方</label>
-              <select value={record.purchaseLocation || ''} onChange={(e) => onUpdate({ ...record, purchaseLocation: e.target.value })} className="w-full bg-white p-2 rounded-xl text-xs font-bold outline-none border border-slate-100 text-black">
+              <select value={record.purchase_location || ''} onChange={(e) => onUpdate({ ...record, purchase_location: e.target.value })} className="w-full bg-white p-2 rounded-xl text-xs font-bold outline-none border border-slate-100 text-black">
                 <option value="">請選擇</option>
                 <option value="蝦皮">蝦皮</option><option value="屈臣氏">屈臣氏</option>
               </select>
             </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 block mb-1">付款方式</label>
-              <select value={record.paymentMethod || '信用卡'} onChange={(e) => onUpdate({ ...record, paymentMethod: e.target.value })} className="w-full bg-white p-2 rounded-xl text-xs font-bold outline-none border border-slate-100 text-black">
+              <select value={record.payment_method || '信用卡'} onChange={(e) => onUpdate({ ...record, payment_method: e.target.value })} className="w-full bg-white p-2 rounded-xl text-xs font-bold outline-none border border-slate-100 text-black">
                 <option value="信用卡">信用卡</option><option value="貨到付款">貨到付款</option>
               </select>
             </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 block mb-1">取貨地點</label>
-              <input type="text" value={record.pickupLocation || ''} onChange={(e) => onUpdate({ ...record, pickupLocation: e.target.value })} placeholder="地點" className="w-full bg-white p-2 rounded-xl text-xs font-bold outline-none border border-slate-100 text-black" />
+              <input type="text" value={record.pickup_location || ''} onChange={(e) => onUpdate({ ...record, pickup_location: e.target.value })} placeholder="地點" className="w-full bg-white p-2 rounded-xl text-xs font-bold outline-none border border-slate-100 text-black" />
             </div>
           </div>
 
-          {/* 品項清單 */}
           <div className="space-y-4">
             <div className="grid grid-cols-12 gap-2 text-[10px] font-black text-slate-400 uppercase px-2">
               <div className="col-span-4">商品名稱</div>
@@ -122,24 +121,24 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
 
             {record.items.map((item, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-<input 
-  type="text" 
-  value={item.name} 
-  readOnly // 鎖定名稱
-  className="col-span-4 bg-slate-100 p-2 rounded-xl text-sm font-bold outline-none text-slate-500 cursor-not-allowed" 
-/>                
-<input 
-  type="number" 
-  value={item.price || ''} 
-  onChange={(e) => updateDetail(idx, 'price', Number(e.target.value))} 
-  className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-right text-orange-600 outline-none" 
-/>
-<input 
-  type="number" 
-  value={item.sellingPrice || ''} 
-  readOnly // 鎖定售價
-  className="col-span-2 bg-slate-100 p-2 rounded-xl text-sm font-black text-right text-blue-400 outline-none cursor-not-allowed" 
-/>
+                <input 
+                  type="text" 
+                  value={item.name} 
+                  readOnly 
+                  className="col-span-4 bg-slate-100 p-2 rounded-xl text-sm font-bold outline-none text-slate-500 cursor-not-allowed" 
+                />                
+                <input 
+                  type="number" 
+                  value={item.price || ''} 
+                  onChange={(e) => updateDetail(idx, 'price', Number(e.target.value))} 
+                  className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-right text-orange-600 outline-none" 
+                />
+                <input 
+                  type="number" 
+                  value={item.sellingPrice || ''} 
+                  readOnly 
+                  className="col-span-2 bg-slate-100 p-2 rounded-xl text-sm font-black text-right text-blue-400 outline-none cursor-not-allowed" 
+                />
                 <input type="number" value={item.qty} onChange={(e) => updateDetail(idx, 'qty', Number(e.target.value))} className="col-span-2 bg-white p-2 rounded-xl text-sm font-black text-center text-black outline-none" />
                 <div className="col-span-1 text-right text-xs font-black text-slate-400">
                   ${(Number(item.sellingPrice) - Number(item.price)) * Number(item.qty)}
@@ -152,7 +151,8 @@ export default function PurchaseCard({ record, products, onUpdate, onDelete }: P
               {products.map(p => (
                 <button 
                   key={p.id} 
-                  onClick={() => handleUpdateItems([...record.items, { name: p.name, price: 0, sellingPrice: p.defaultPrice, qty: 1 }])} 
+                  // 注意：這裡使用 p.default_price 同步雲端商品屬性
+                  onClick={() => handleUpdateItems([...record.items, { name: p.name, price: 0, sellingPrice: p.default_price || 0, qty: 1 }])} 
                   className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-2 rounded-xl hover:bg-blue-100 transition-colors"
                 >
                   + {p.name}
